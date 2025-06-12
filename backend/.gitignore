@@ -1,0 +1,16 @@
+# backend/.gitignore
+
+# Go binaries
+*.exe
+*.out
+*.test
+
+# Vendor folder if you're vendoring dependencies
+/vendor/
+
+# IDE files
+.vscode/
+*.swp
+
+# Environment files
+.env
