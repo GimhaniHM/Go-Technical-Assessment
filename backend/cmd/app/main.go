@@ -1,18 +1,41 @@
 package main
 
 import (
+	"flag"
 	"log"
-	"net/http"
-	"path/filepath"
 
 	"github.com/GimhaniHM/backend/internal/handlers"
+	"github.com/GimhaniHM/backend/internal/services"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	csvPath := filepath.Join("..", "data", "GO_test_5m.csv")
-	mux := http.NewServeMux()
-	handlers.RegisterRevenueRoutes(mux, csvPath)
+	// flags for CSV path and listen address
+	csvPath := flag.String("data", "data/transactions.csv", "Path to transactions CSV file")
+	addr := flag.String("addr", ":8090", "Server listen address")
+	flag.Parse()
 
-	log.Println("Listening on :5000")
-	log.Fatal(http.ListenAndServe(":5000", mux))
+	// load & aggregrate data
+	agg, err := services.ComputeAggregates(*csvPath)
+	if err != nil {
+		log.Fatalf("failed to load data: %v", err)
+	}
+
+	// set up HTTP handlers
+	revH := handlers.NewRevenueHandler(agg)
+	router := gin.Default()
+
+	// Group all analytics routes under /api
+	api := router.Group("/api")
+	{
+		api.GET("/country-revenue", revH.GetCountryRevenue(csvPath))
+		api.GET("/top-products", revH.GetTopProducts(csvPath))
+		api.GET("/monthly-sales", revH.GetMonthlySales(csvPath))
+		api.GET("/region-revenue", revH.GetTopRegions(csvPath))
+	}
+
+	log.Printf("▶️  listening on %s", *addr)
+	if err := router.Run(*addr); err != nil {
+		log.Fatalf("server error: %v", err)
+	}
 }

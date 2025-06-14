@@ -11,66 +11,75 @@ import (
 
 // AggregateResults holds all processed dataset slices
 type AggregateResults struct {
-	CountryProducts []models.CountryProd
-	TopProducts     []models.ProdStock
-	MonthlySales    []models.MonthSales
-	TopRegions      []models.RegionAgg
+	CountryRevenueTable []models.CountryRevenue   // country + product revenue
+	TopProducts         []models.ProductFrequency // top 20 products
+	MonthlySales        []models.MonthlySales     // monthly sales volumes
+	TopRegions          []models.RegionRevenue    // top 30 regions
 }
 
+// ComputeAggregates reads the CSV at csvPath, aggregates metrics, and returns sorted slices.
 func ComputeAggregates(csvPath string) (*AggregateResults, error) {
 	jobs := make(chan []string, 1000)
 	errs := make(chan error, 1)
 	go utils.StreamCSV(csvPath, jobs, errs)
 
-	countryProd := make(map[string]models.CountryProd)
-	prodFreq := make(map[string]models.ProdStock)
-	monthAgg := make(map[string]models.MonthSales)
-	regionAgg := make(map[string]models.RegionAgg)
+	// In-memory aggregation maps
+	cpMap := make(map[string]models.CountryRevenue)
+	pfMap := make(map[string]models.ProductFrequency)
+	msMap := make(map[string]models.MonthlySales)
+	rrMap := make(map[string]models.RegionRevenue)
 
 	var wg sync.WaitGroup
 	workerCount := 4
 	wg.Add(workerCount)
 
-	for w := 0; w < workerCount; w++ {
+	for i := 0; i < workerCount; i++ {
 		go func() {
 			defer wg.Done()
 			for rec := range jobs {
+				// parse fields from CSV record
 				country := rec[3]
+				region := rec[4]
+				date := rec[2]    // "YYYY-MM-DD..."
+				month := date[:7] // "YYYY-MM"
 				product := rec[6]
 				totalPrice, _ := strconv.ParseFloat(rec[10], 64)
 				quantity, _ := strconv.Atoi(rec[9])
 				stockQty, _ := strconv.Atoi(rec[11])
-				region := rec[4]
-				month := rec[2][:7]
 
-				// aggregates
+				// 1) Country + Product → CountryRevenue
 				keyCP := country + "|" + product
-				cp := countryProd[keyCP]
-				cp.Country, cp.ProductName = country, product
-				cp.TotalRevenue += totalPrice
-				cp.TransactionCount++
-				countryProd[keyCP] = cp
+				cr := cpMap[keyCP]
+				cr.Country = country
+				cr.ProductName = product
+				cr.TotalRevenue += totalPrice
+				cr.TransactionCount++
+				cpMap[keyCP] = cr
 
-				p := prodFreq[product]
-				p.ProductName = product
-				p.Transactions++
-				p.StockQty = stockQty
-				prodFreq[product] = p
+				// 2) Product → ProductFrequency
+				pf := pfMap[product]
+				pf.ProductName = product
+				pf.PurchaseCount++
+				pf.StockQuantity = stockQty
+				pfMap[product] = pf
 
-				m := monthAgg[month]
-				m.Month = month
-				m.SalesVolume += totalPrice
-				monthAgg[month] = m
+				// 3) YYYY-MM → MonthlySales
+				ms := msMap[month]
+				ms.Month = month
+				ms.SalesVolume += totalPrice
+				msMap[month] = ms
 
-				r := regionAgg[region]
-				r.Region = region
-				r.Revenue += totalPrice
-				r.ItemsSold += quantity
-				regionAgg[region] = r
+				// 4) Region → RegionRevenue
+				rr := rrMap[region]
+				rr.Region = region
+				rr.TotalRevenue += totalPrice
+				rr.ItemsSold += quantity
+				rrMap[region] = rr
 			}
 		}()
 	}
 
+	// wait for workers to finish then check errors
 	go func() {
 		wg.Wait()
 		close(errs)
@@ -80,44 +89,49 @@ func ComputeAggregates(csvPath string) (*AggregateResults, error) {
 		return nil, err
 	}
 
-	// Convert maps to sorted slices
-	cpSlice := []models.CountryProd{}
-	for _, v := range countryProd {
-		cpSlice = append(cpSlice, v)
+	// Convert maps to slices
+	var countrySlice []models.CountryRevenue
+	for _, v := range cpMap {
+		countrySlice = append(countrySlice, v)
 	}
-	sort.Slice(cpSlice, func(i, j int) bool {
-		return cpSlice[i].TotalRevenue > cpSlice[j].TotalRevenue
+	sort.Slice(countrySlice, func(i, j int) bool {
+		return countrySlice[i].TotalRevenue > countrySlice[j].TotalRevenue
 	})
 
-	prodSlice := []models.ProdStock{}
-	for _, v := range prodFreq {
-		prodSlice = append(prodSlice, v)
+	var productSlice []models.ProductFrequency
+	for _, v := range pfMap {
+		productSlice = append(productSlice, v)
 	}
-	sort.Slice(prodSlice, func(i, j int) bool {
-		return prodSlice[i].Transactions > prodSlice[j].Transactions
+	sort.Slice(productSlice, func(i, j int) bool {
+		return productSlice[i].PurchaseCount > productSlice[j].PurchaseCount
 	})
-	if len(prodSlice) > 20 {
-		prodSlice = prodSlice[:20]
+	if len(productSlice) > 20 {
+		productSlice = productSlice[:20]
 	}
 
-	monthSlice := []models.MonthSales{}
-	for _, v := range monthAgg {
+	var monthSlice []models.MonthlySales
+	for _, v := range msMap {
 		monthSlice = append(monthSlice, v)
 	}
 	sort.Slice(monthSlice, func(i, j int) bool {
 		return monthSlice[i].SalesVolume > monthSlice[j].SalesVolume
 	})
 
-	regionSlice := []models.RegionAgg{}
-	for _, v := range regionAgg {
+	var regionSlice []models.RegionRevenue
+	for _, v := range rrMap {
 		regionSlice = append(regionSlice, v)
 	}
 	sort.Slice(regionSlice, func(i, j int) bool {
-		return regionSlice[i].Revenue > regionSlice[j].Revenue
+		return regionSlice[i].TotalRevenue > regionSlice[j].TotalRevenue
 	})
 	if len(regionSlice) > 30 {
 		regionSlice = regionSlice[:30]
 	}
 
-	return &AggregateResults{cpSlice, prodSlice, monthSlice, regionSlice}, nil
+	return &AggregateResults{
+		CountryRevenueTable: countrySlice,
+		TopProducts:         productSlice,
+		MonthlySales:        monthSlice,
+		TopRegions:          regionSlice,
+	}, nil
 }

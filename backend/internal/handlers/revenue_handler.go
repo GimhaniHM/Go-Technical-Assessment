@@ -1,46 +1,58 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/GimhaniHM/backend/internal/services"
+	"github.com/gin-gonic/gin"
 )
 
-func RegisterRevenueRoutes(mux *http.ServeMux, csvPath string) {
-	mux.HandleFunc("/api/country-revenue", func(w http.ResponseWriter, r *http.Request) {
-		res, err := services.ComputeAggregates(csvPath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(res.CountryProducts)
-	})
+// RevenueHandler exposes aggregated endpoints.
+type RevenueHandler struct {
+	agg *services.AggregateResults
+}
 
-	mux.HandleFunc("/api/top-products", func(w http.ResponseWriter, r *http.Request) {
-		res, err := services.ComputeAggregates(csvPath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(res.TopProducts)
-	})
+// NewRevenueHandler constructs the handler.
+func NewRevenueHandler(agg *services.AggregateResults) *RevenueHandler {
+	return &RevenueHandler{agg: agg}
+}
 
-	mux.HandleFunc("/api/month-sales", func(w http.ResponseWriter, r *http.Request) {
-		res, err := services.ComputeAggregates(csvPath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(res.MonthlySales)
-	})
+// GetCountryRevenue handles GET /api/revenue/countries
+func (h *RevenueHandler) GetCountryRevenue(c *gin.Context) {
+	data, err := h.agg.CountryRevenue()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
 
-	mux.HandleFunc("/api/region-revenue", func(w http.ResponseWriter, r *http.Request) {
-		res, err := services.ComputeAggregates(csvPath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(res.TopRegions)
-	})
+// GetTopProducts handles GET /api/products/top
+func (h *RevenueHandler) GetTopProducts(c *gin.Context) {
+	data, err := h.agg.TopProducts()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
+
+// GetMonthlySales handles GET /api/sales/monthly
+func (h *RevenueHandler) GetMonthlySales(c *gin.Context) {
+	data, err := h.agg.MonthlySales()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
+
+// GetTopRegions handles GET /api/regions/top
+func (h *RevenueHandler) GetTopRegions(c *gin.Context) {
+	data, err := h.agg.TopRegions()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
 }

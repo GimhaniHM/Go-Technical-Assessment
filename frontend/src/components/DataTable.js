@@ -1,40 +1,29 @@
-import * as React from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import React from 'react';
 
-const columns = [
-  { field: 'id', headerName: 'ID', width: 90 },
-  {
-    field: 'region',
-    headerName: 'Region',
-    width: 150,
-  },
-  {
-    field: 'rainfall',
-    headerName: 'Rainfall (mm)',
-    width: 150,
-  },
-  {
-    field: 'temperature',
-    headerName: 'Temperature (°C)',
-    width: 170,
-  },
-];
-
-const rows = [
-  { id: 1, region: 'Colombo', rainfall: 120, temperature: 28 },
-  { id: 2, region: 'Kandy', rainfall: 95, temperature: 26 },
-  { id: 3, region: 'Galle', rainfall: 110, temperature: 27 },
-];
-
-export default function DataTable() {
+/**
+ * Simple reusable table.
+ * @param {{ header: string, accessor: string }[]} columns
+ * @param {Object[]} data
+ */
+export default function DataTable({ columns, data }) {
   return (
-    <div style={{ height: 400, width: '100%' }}>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
-      />
-    </div>
+    <table className="data-table">
+      <thead>
+        <tr>
+          {columns.map(col => (
+            <th key={col.accessor}>{col.header}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, i) => (
+          <tr key={i}>
+            {columns.map(col => (
+              <td key={col.accessor}>{row[col.accessor]}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

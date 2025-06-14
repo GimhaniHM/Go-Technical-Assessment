@@ -36,3 +36,27 @@
     transform: rotate(360deg);
   }
 }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+.data-table th,
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+.data-table th {
+  background: #f4f4f4;
+}
+
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.dashboard section {
+  margin-bottom: 2rem;
+}
