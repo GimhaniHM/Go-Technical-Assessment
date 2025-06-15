@@ -67,3 +67,12 @@ go mod tidy
 cd backend/cmd/app
 go run main.go
  then gin server will run on http://localhost:8090
+
+03. Set Up the Frontend (React Dashboard)
+
+(I)cd frontend
+(II) install the dependencies
+npm install
+(III) to run dashboard on your browser
+npm start
+run it on http://localhost:3000
