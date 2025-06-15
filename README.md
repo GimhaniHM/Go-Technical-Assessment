@@ -10,13 +10,9 @@ This Go backend powers a high-performance analytics dashboard that processes lar
 2. [Quick Start](#quick-start)  
    - [Prerequisites](#prerequisites)  
    - [Installation & Run](#installation--run)  
-3. [CSV Input Format](#csv-input-format)  
-4. [API Endpoints](#api-endpoints)  
-5. [Test & Coverage](#test--coverage)  
-6. [Project Structure](#project-structure)  
-7. [Extensibility](#extensibility)  
-8. [Contributing & License](#contributing--license)  
-
+3. [API Endpoints](#api-endpoints)  
+4. [Test & Coverage](#test--coverage)  
+5. [Project Structure](#project-structure)  
 ---
 
 ## 📌 Overview
