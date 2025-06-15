@@ -83,7 +83,7 @@ run it on http://localhost:3000
 | `GET /api/regions/top`       | Top N regions by revenue & item count    | `limit` (default: 30) |
 
 
-Test & Coverage
+###Test & Coverage
 Run tests with coverage:
 cd backend
 use cmd terminal
@@ -93,3 +93,37 @@ go test ./internal/... -coverprofile=coverage.out
 go tool cover -html=coverage.out -o coverage.html
 to open coverage report in a browser 
 start coverage.html
+
+### Project Structure
+backend/
+├── internal/
+│   ├── handlers/     # Gin HTTP endpoints
+│   ├── services/     # Aggregation & business logic
+│   ├── utils/        # CSV parsing helper
+│   └── models/       # Data transfer objects
+├── main.go           # Server entry point
+└── README.md         # This file
+frontend/
+
+QORIA-TECHNICAL-ASSESSMENT/
+└── backend/
+    ├── cmd/
+    │   └── app/
+    │       └── main.go #
+    ├── internal/
+    │   ├── handlers/   # Gin HTTP endpoints
+    │   │   ├── insght_handler.go   #
+    │   │   ├── revenue_handler.go   #
+    │   │   └── revenue_handler_test.go   #
+    │   ├── models/   # Data transfer objects
+    │   │   └── models.go
+    │   ├── services/   # Aggregation & business logic
+    │   │   ├── aggregator.go   #
+    │   │   ├── aggregator_test.go   #
+    │   │   └── concurrent_aggregator.go   #
+    │   └── utils/   # CSV streaming helper
+            |--- csvstream.go   #
+            |--- csvstream_test.go   #
+    ├── go.mod
+    └── go.sum
+
