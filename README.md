@@ -75,6 +75,14 @@ run it on http://localhost:3000
 
 ###API Endpoints
 
+| Endpoint                     | Description                              | Query Params          |
+| ---------------------------- | ---------------------------------------- | --------------------- |
+| `GET /api/revenue/countries` | Country + Product revenue (paginated)    | `limit`, `offset`     |
+| `GET /api/products/top`      | Top N products by purchase count & stock | `limit` (default: 20) |
+| `GET /api/sales/monthly`     | Monthly aggregated sales volume          | —                     |
+| `GET /api/regions/top`       | Top N regions by revenue & item count    | `limit` (default: 30) |
+
+
 Test & Coverage
 Run tests with coverage:
 cd backend
