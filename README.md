@@ -43,7 +43,7 @@ This solution:
 
 * **Go** ≥ 1.20
 * **Node.js** ≥ 16 & **npm** ≥ 8
-* A **transactions CSV** (`.csv`) with **13 columns** in this order:
+* A **data CSV** (`.csv`) with **13 columns** in this order:
 
   ```csv
   transaction_id,transaction_date,user_id,country,region,
@@ -53,19 +53,20 @@ This solution:
 
 ### Backend Setup
 
-```bash
+bash
+```
 # 1. Clone repo
 git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
 cd Go-Technical-Assessment/backend
 
-# 2. Place your CSV in cmd/app/data/ and name it transactions.csv
+# 2. Place data CSV file inside cmd/app/data/ folder and name it as GO_test_5m.csv
 
 # 3. Install dependencies
 go mod tidy
 
 # 4. Run server (defaults: addr=:8090, workers=CPU count)
 cd cmd/app
-go run main.go --data ../data/transactions.csv --addr :8090 --workers 4
+go run main.go
 ```
 
 **Verify:**
