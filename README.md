@@ -114,12 +114,20 @@ start coverage.html
 backend/
 ├── cmd/app/main.go             # Entrypoint, CLI flags & HTTP server
 ├── internal/
-│   ├── handlers/
-│   │   └── insight_handler.go  # Gin handlers for each endpoint
-│   ├── models/models.go        # Data models & JSON DTOs
-│   ├── services/concurrent_aggregator.go  # Streaming + concurrent CSV aggregator
-│   └── utils/csvstream.go      # Sequential CSV reader with preprocessing
-└── go.mod                      # Go module config
+│   ├── handlers/               # Gin handlers for each endpoint
+│   │   ├── insight_handler.go
+│   │   ├── revenue_handler.go
+│   │   └── revenue_handler_test.go
+│   ├── models/                 # Data models & JSON DTOs
+|   |   └── models.go      
+│   ├── services/               #Aggregation & business logic
+|   |   ├── aggregator.go.go
+│   │   ├── concurrent_aggregator.go
+│   │   └── aggregator_test.go
+│   └── utils/                  # Sequential CSV reader with preprocessing
+|       ├── csvstream.go.go
+│       └── csvstream_test.go.go
+└── go.mod                      
 
 frontend/
 ├── src/
