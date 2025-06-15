@@ -46,13 +46,13 @@ This solution:
 * A **data CSV** (`.csv`) file
 
 ### Backend Setup
-bash
-```
-#1. Clone repo
+
+```bash
+# 1. Clone repo
 git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
 cd Go-Technical-Assessment/backend
 
-# 2. Place data CSV file inside cmd/app/data/ folder and name it as GO_test_5m.csv
+# 2. Place the data CSV file inside the cmd/app/data/ folder and name it as GO_test_5m.csv
 
 # 3. Install dependencies
 go mod tidy
