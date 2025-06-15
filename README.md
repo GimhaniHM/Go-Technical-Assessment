@@ -51,7 +51,8 @@ This backend reads a multi-million‑row CSV (~5 M+ records) using buffered st
 ### 01. Clone the Repository
 ```bash
 git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
-cd csv-analytics-api
+
+### 02. Set Up the Backend (Go)
 
 go mod tidy
 go run main.go -csv=/path/to/data.csv
