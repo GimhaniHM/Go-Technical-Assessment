@@ -73,6 +73,8 @@ npm install
 npm start
 run it on http://localhost:3000
 
+###API Endpoints
+
 Test & Coverage
 Run tests with coverage:
 cd backend
