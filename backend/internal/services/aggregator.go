@@ -2,136 +2,150 @@ package services
 
 import (
 	"sort"
-	"strconv"
-	"sync"
+	"time"
 
 	"github.com/GimhaniHM/backend/internal/models"
 	"github.com/GimhaniHM/backend/internal/utils"
 )
 
-// AggregateResults holds all processed dataset slices
-type AggregateResults struct {
-	CountryRevenueTable []models.CountryRevenue   // country + product revenue
-	TopProducts         []models.ProductFrequency // top 20 products
-	MonthlySales        []models.MonthlySales     // monthly sales volumes
-	TopRegions          []models.RegionRevenue    // top 30 regions
+// holds all transaction data in memory for processing
+type Aggregator struct {
+	transactions []models.Transaction
 }
 
-// ComputeAggregates reads the CSV at csvPath, aggregates metrics, and returns sorted slices.
-func ComputeAggregates(csvPath string) (*AggregateResults, error) {
-	jobs := make(chan []string, 1000)
-	errs := make(chan error, 1)
-	go utils.StreamCSV(csvPath, jobs, errs)
+// creates a Aggregator instance
+func NewTestAggregator(txs []models.Transaction) *Aggregator {
+	return &Aggregator{transactions: txs}
+}
 
-	// In-memory aggregation maps
-	cpMap := make(map[string]models.CountryRevenue)
-	pfMap := make(map[string]models.ProductFrequency)
-	msMap := make(map[string]models.MonthlySales)
-	rrMap := make(map[string]models.RegionRevenue)
-
-	var wg sync.WaitGroup
-	workerCount := 4
-	wg.Add(workerCount)
-
-	for i := 0; i < workerCount; i++ {
-		go func() {
-			defer wg.Done()
-			for rec := range jobs {
-				// parse fields from CSV record
-				country := rec[3]
-				region := rec[4]
-				date := rec[2]    // "YYYY-MM-DD..."
-				month := date[:7] // "YYYY-MM"
-				product := rec[6]
-				totalPrice, _ := strconv.ParseFloat(rec[10], 64)
-				quantity, _ := strconv.Atoi(rec[9])
-				stockQty, _ := strconv.Atoi(rec[11])
-
-				// 1) Country + Product → CountryRevenue
-				keyCP := country + "|" + product
-				cr := cpMap[keyCP]
-				cr.Country = country
-				cr.ProductName = product
-				cr.TotalRevenue += totalPrice
-				cr.TransactionCount++
-				cpMap[keyCP] = cr
-
-				// 2) Product → ProductFrequency
-				pf := pfMap[product]
-				pf.ProductName = product
-				pf.PurchaseCount++
-				pf.StockQuantity = stockQty
-				pfMap[product] = pf
-
-				// 3) YYYY-MM → MonthlySales
-				ms := msMap[month]
-				ms.Month = month
-				ms.SalesVolume += totalPrice
-				msMap[month] = ms
-
-				// 4) Region → RegionRevenue
-				rr := rrMap[region]
-				rr.Region = region
-				rr.TotalRevenue += totalPrice
-				rr.ItemsSold += quantity
-				rrMap[region] = rr
-			}
-		}()
-	}
-
-	// wait for workers to finish then check errors
-	go func() {
-		wg.Wait()
-		close(errs)
-	}()
-
-	if err := <-errs; err != nil {
+// NewAggregator loads the CSV on startup.
+func NewAggregator(csvPath string) (*Aggregator, error) {
+	txs, err := utils.ReadTransactions(csvPath)
+	if err != nil {
 		return nil, err
 	}
+	return &Aggregator{transactions: txs}, nil
+}
 
-	// Convert maps to slices
-	var countrySlice []models.CountryRevenue
-	for _, v := range cpMap {
-		countrySlice = append(countrySlice, v)
+// RevenueByCountryAndProduct returns a list of total revenue and transaction count
+// grouped by country and product, sorted by highest revenue.
+func (a *Aggregator) RevenueByCountryAndProduct() []models.CountryRevenue {
+	tmp := map[struct{ C, P string }]struct {
+		rev float64
+		cnt int
+	}{}
+	for _, t := range a.transactions {
+		key := struct{ C, P string }{t.Country, t.ProductName}
+		v := tmp[key]
+		v.rev += t.TotalPrice
+		v.cnt++
+		tmp[key] = v
 	}
-	sort.Slice(countrySlice, func(i, j int) bool {
-		return countrySlice[i].TotalRevenue > countrySlice[j].TotalRevenue
+
+	out := make([]models.CountryRevenue, 0, len(tmp))
+	for k, v := range tmp {
+		out = append(out, models.CountryRevenue{
+			Country:          k.C,
+			ProductName:      k.P,
+			TotalRevenue:     v.rev,
+			TransactionCount: v.cnt,
+		})
+	}
+
+	// Sort by descending revenue
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].TotalRevenue > out[j].TotalRevenue
+	})
+	return out
+}
+
+// TopProducts returns the top N products by total quantity sold
+// If two products have the same quantity, they are sorted by name in descending order
+func (a *Aggregator) TopProducts(limit int) []models.ProductFrequency {
+	tmp := map[string]struct{ cnt, stock int }{}
+	for _, t := range a.transactions {
+		v := tmp[t.ProductName]
+		v.cnt += t.Quantity
+		v.stock = t.StockQuantity
+		tmp[t.ProductName] = v
+	}
+
+	out := make([]models.ProductFrequency, 0, len(tmp))
+	for name, v := range tmp {
+		out = append(out, models.ProductFrequency{
+			ProductName:   name,
+			PurchaseCount: v.cnt,
+			StockQuantity: v.stock,
+		})
+	}
+
+	// Sort by purchase count (desc), then by product name (desc)
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].PurchaseCount == out[j].PurchaseCount {
+			return out[i].ProductName > out[j].ProductName
+		}
+		return out[i].PurchaseCount > out[j].PurchaseCount
 	})
 
-	var productSlice []models.ProductFrequency
-	for _, v := range pfMap {
-		productSlice = append(productSlice, v)
+	// Limit the result to the top N products
+	if len(out) > limit {
+		out = out[:limit]
 	}
-	sort.Slice(productSlice, func(i, j int) bool {
-		return productSlice[i].PurchaseCount > productSlice[j].PurchaseCount
-	})
-	if len(productSlice) > 20 {
-		productSlice = productSlice[:20]
+	return out
+}
+
+// MonthlySalesVolume returns the quantity sold in each month, sorted chronologically
+func (a *Aggregator) MonthlySalesVolume() []models.MonthlySales {
+	tmp := map[string]int{}
+	for _, t := range a.transactions {
+		month := t.TransactionDate.Format("2006-01")
+		tmp[month] += t.Quantity
 	}
 
-	var monthSlice []models.MonthlySales
-	for _, v := range msMap {
-		monthSlice = append(monthSlice, v)
-	}
-	sort.Slice(monthSlice, func(i, j int) bool {
-		return monthSlice[i].SalesVolume > monthSlice[j].SalesVolume
-	})
-
-	var regionSlice []models.RegionRevenue
-	for _, v := range rrMap {
-		regionSlice = append(regionSlice, v)
-	}
-	sort.Slice(regionSlice, func(i, j int) bool {
-		return regionSlice[i].TotalRevenue > regionSlice[j].TotalRevenue
-	})
-	if len(regionSlice) > 30 {
-		regionSlice = regionSlice[:30]
+	out := make([]models.MonthlySales, 0, len(tmp))
+	for m, vol := range tmp {
+		out = append(out, models.MonthlySales{Month: m, SalesVolume: vol})
 	}
 
-	return &AggregateResults{
-		CountryRevenueTable: countrySlice,
-		TopProducts:         productSlice,
-		MonthlySales:        monthSlice,
-		TopRegions:          regionSlice,
-	}, nil
+	// Sort by date (ascending)
+	sort.Slice(out, func(i, j int) bool {
+		ti, _ := time.Parse("2006-01", out[i].Month)
+		tj, _ := time.Parse("2006-01", out[j].Month)
+		return ti.Before(tj)
+	})
+	return out
+}
+
+// TopRegionsByRevenue returns the top N regions by total revenue
+func (a *Aggregator) TopRegionsByRevenue(limit int) []models.RegionRevenue {
+	tmp := map[string]struct {
+		rev  float64
+		sold int
+	}{}
+	for _, t := range a.transactions {
+		v := tmp[t.Region]
+		v.rev += t.TotalPrice
+		v.sold += t.Quantity
+		tmp[t.Region] = v
+	}
+
+	out := make([]models.RegionRevenue, 0, len(tmp))
+	for region, v := range tmp {
+		out = append(out, models.RegionRevenue{
+			Region:       region,
+			TotalRevenue: v.rev,
+			ItemsSold:    v.sold,
+		})
+	}
+
+	// Sort by total revenue (desc)
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].TotalRevenue > out[j].TotalRevenue
+	})
+
+	// Limit the result to top N regions
+	if len(out) > limit {
+		out = out[:limit]
+	}
+	return out
 }
