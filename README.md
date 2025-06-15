@@ -15,8 +15,6 @@ This repository contains a **Go backend** and **React frontend** for a high-perf
 3. [API Endpoints](#api-endpoints)
 4. [Testing & Coverage](#testing--coverage)
 5. [Project Structure](#project-structure)
-6. [Extensibility & Preprocessing](#extensibility--preprocessing)
-7. [License](#license)
 
 ---
 
@@ -142,14 +140,3 @@ frontend/
 
 ---
 
-## 🔧 Extensibility & Preprocessing
-
-* **Filtering** (e.g. by date or category) and **enrichment** (e.g. discounts) live in `csvstream.go` or worker loops.
-* **New insights**: add maps & combine logic in `concurrent_aggregator.go` and expose via handlers.
-* **Frontend**: add new charts in `Dashboard.js` by fetching from new endpoints.
-
----
-
-## 📄 License
-
-Released under the **MIT License**.
