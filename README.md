@@ -37,15 +37,21 @@ This backend reads a multi-million‑row CSV (~5 M+ records) using buffered st
 
 ### Prerequisites
 
-- Go ≥ 1.20  
-- `git`  
-- Data CSV file 
+#### Backend (Go)
+- **Go** version **1.20 or later**
+- **Git** (for cloning the repository)
+- **CSV data file** with **13 columns**:
+
+#### Frontend (React Dashboard)
+- **Node.js** version **16 or later**
+- **npm** version ≥ 8
 
 ### Installation & Run
 
+### 01. Clone the Repository
 ```bash
-git clone https://github.com/GimhaniHM/csv-analytics-api.git
-cd csv-analytics-api/backend
+git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
+cd csv-analytics-api
 
 go mod tidy
 go run main.go -csv=/path/to/data.csv
