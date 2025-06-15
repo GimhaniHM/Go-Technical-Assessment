@@ -55,12 +55,12 @@ This solution:
 
 ### Backend Setup
 
-bash
-#### 1. Clone repo
+### 1. Clone repo
 git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
+
 cd Go-Technical-Assessment/backend
 
-# 2. Place your CSV in cmd/app/data/ and name it transactions.csv
+# 2. Place your CSV inside cmd/app/data/ and name it GO_test_5m.csv
 
 # 3. Install dependencies
 go mod tidy
