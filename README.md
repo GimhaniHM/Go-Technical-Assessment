@@ -93,7 +93,7 @@ Open: `http://localhost:3000`
 
 ## 🧪 Testing & Coverage
 
-Use the cmd terminal to run these commands
+Use the **cmd** terminal to run these commands
 
 ```bash
 # Run unit tests & record coverage
