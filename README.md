@@ -72,3 +72,14 @@ npm install
 (III) to run dashboard on your browser
 npm start
 run it on http://localhost:3000
+
+Test & Coverage
+Run tests with coverage:
+cd backend
+use cmd terminal
+
+go test ./internal/... -coverprofile=coverage.out
+ then run below command to create html coverage report
+go tool cover -html=coverage.out -o coverage.html
+to open coverage report in a browser 
+start coverage.html
