@@ -43,13 +43,7 @@ This solution:
 
 * **Go** ≥ 1.20
 * **Node.js** ≥ 16 & **npm** ≥ 8
-* A **data CSV** (`.csv`) with **13 columns** in this order:
-
-  ```csv
-  transaction_id,transaction_date,user_id,country,region,
-  product_id,product_name,category,price,quantity,
-  total_price,stock_quantity,added_date
-  ```
+* A **data CSV** (`.csv`) file
 
 ### Backend Setup
 bash
