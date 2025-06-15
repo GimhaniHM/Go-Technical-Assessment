@@ -130,8 +130,8 @@ backend/
 └── go.mod                      
 
 frontend/
-├── src/
-│   ├── components/
+├── src/                        # Source code for React application.
+│   ├── components/             # Contains reusable UI components
 │   │   ├── DataTable.js
 │   │   ├── Dashboard.js
 │   │   └── Pagination.js
