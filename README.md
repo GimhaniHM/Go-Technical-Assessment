@@ -53,6 +53,17 @@ This backend reads a multi-million‑row CSV (~5 M+ records) using buffered st
 git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
 
 ### 02. Set Up the Backend (Go)
+(I) cd  Go-Technical-Assessment/backend
+
+(I) Make sure to place CSV file inside the folder
+/cmd/app/data as GO_test_5m.csv
+
+(II) install go dependencies
+inside backend folder
 
 go mod tidy
-go run main.go -csv=/path/to/data.csv
+
+(III) run gin server
+cd backend/cmd/app
+go run main.go
+ then gin server will run on http://localhost:8090
