@@ -127,3 +127,24 @@ QORIA-TECHNICAL-ASSESSMENT/
     ├── go.mod
     └── go.sum
 
+
+QORIA-TECHNICAL-ASSESSMENT/
+└── frontend/
+    ├── node_modules/
+    ├── public/
+    ├── src/
+    │   ├── components/
+    │   │   ├── Dashboard.js
+    │   │   ├── DataTable.js
+    │   │   ├── Pagination.css
+    │   │   └── Pagination.js
+    │   ├── App.css
+    │   ├── App.js
+    │   ├── index.css
+    │   └── index.js
+    ├── .gitignore
+    ├── package-lock.json
+    ├── package.json
+    ├── README.md
+    └── yarnlock
+
