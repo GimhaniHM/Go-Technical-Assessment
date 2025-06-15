@@ -28,7 +28,8 @@ ABT Corp requires a fast, reusable solution for generating key insights from the
 - **Monthly sales volume** visualization  
 - **Top 30** regions by revenue and items sold  
 
-This backend reads a 13-column CSV file into memory, aggregates on demand, and serves JSON via Gin REST endpoints.
+This backend reads a multi-million‑row CSV (~5 M+ records) using buffered streaming, then uses Go concurrency (worker pool + goroutines + channels) to preprocess data in parallel. It aggregates results into summarized slices and serves them as JSON via Gin REST endpoints, ensuring memory efficiency and fast response times under 10 seconds. Go’s buffered I/O, pooling, and optimized data structures are used to maintain high throughput.
+
 
 ---
 
@@ -38,7 +39,7 @@ This backend reads a 13-column CSV file into memory, aggregates on demand, and s
 
 - Go ≥ 1.20  
 - `git`  
-- Transaction CSV file (13 columns)  
+- Data CSV file 
 
 ### Installation & Run
 
