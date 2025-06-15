@@ -54,7 +54,7 @@ This solution:
 ### Backend Setup
 bash
 ```
-# 1. Clone repo
+#1. Clone repo
 git clone https://github.com/GimhaniHM/Go-Technical-Assessment.git
 cd Go-Technical-Assessment/backend
 
