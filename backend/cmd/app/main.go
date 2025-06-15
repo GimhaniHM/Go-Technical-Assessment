@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"runtime"
 
 	"github.com/GimhaniHM/backend/internal/handlers"
 	"github.com/GimhaniHM/backend/internal/services"
@@ -11,30 +12,31 @@ import (
 
 func main() {
 	// flags for CSV path and listen address
-	csvPath := flag.String("data", "data/transactions.csv", "Path to transactions CSV file")
-	addr := flag.String("addr", ":8090", "Server listen address")
+	csvPath := flag.String("data", "data/GO_test_5m.csv", "Path to transactions CSV file")
+	addr := flag.String("addr", ":8090", "HTTP listen address")
+	workers := flag.Int("workers", runtime.NumCPU(), "Number of CSV parse workers")
 	flag.Parse()
 
-	// load & aggregrate data
-	agg, err := services.ComputeAggregates(*csvPath)
+	// Run concurrent aggregation
+	ca := services.NewConcurrentAggregator(*csvPath, *workers)
+	insights, err := ca.Run()
 	if err != nil {
-		log.Fatalf("failed to load data: %v", err)
+		log.Fatalf("aggregation error: %v", err)
 	}
 
-	// set up HTTP handlers
-	revH := handlers.NewRevenueHandler(agg)
-	router := gin.Default()
+	// HTTP handlers
+	h := handlers.NewInsightHandler(insights)
 
-	// Group all analytics routes under /api
+	router := gin.Default()
 	api := router.Group("/api")
 	{
-		api.GET("/country-revenue", revH.GetCountryRevenue(csvPath))
-		api.GET("/top-products", revH.GetTopProducts(csvPath))
-		api.GET("/monthly-sales", revH.GetMonthlySales(csvPath))
-		api.GET("/region-revenue", revH.GetTopRegions(csvPath))
+		api.GET("/revenue/countries", h.GetCountryRevenue)
+		api.GET("/products/top", h.GetTopProducts)
+		api.GET("/sales/monthly", h.GetMonthlySales)
+		api.GET("/regions/top", h.GetTopRegions)
 	}
 
-	log.Printf("▶️  listening on %s", *addr)
+	log.Printf("Listening on %s", *addr)
 	if err := router.Run(*addr); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
