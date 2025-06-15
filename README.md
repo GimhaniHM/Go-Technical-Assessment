@@ -52,7 +52,6 @@ This solution:
   ```
 
 ### Backend Setup
-
 bash
 ```
 # 1. Clone repo
