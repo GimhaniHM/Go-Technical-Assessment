@@ -93,6 +93,8 @@ Open: `http://localhost:3000`
 
 ## 🧪 Testing & Coverage
 
+Use the cmd terminal to run these commands
+
 ```bash
 # Run unit tests & record coverage
 cd backend
@@ -100,10 +102,10 @@ go test ./internal/... -coverprofile=coverage.out
 
 # Generate HTML coverage report
 go tool cover -html=coverage.out -o coverage.html
+
+# Open HTML coverage report
+start coverage.html
 ```
-
-Open `coverage.html` to inspect coverage. Aim for ≥ 80% in services & utils.
-
 ---
 
 ## 📂 Project Structure
